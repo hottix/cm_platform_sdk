@@ -46,7 +46,8 @@ public class CMDatabaseHelper extends SQLiteOpenHelper{
     private static final boolean LOCAL_LOGV = false;
 
     private static final String DATABASE_NAME = "cmsettings.db";
-    private static final int DATABASE_VERSION = 6;
+
+    private static final int DATABASE_VERSION = 3;
 
     public static class CMTableNames {
         public static final String TABLE_SYSTEM = "system";
@@ -188,11 +189,10 @@ public class CMDatabaseHelper extends SQLiteOpenHelper{
             db.beginTransaction();
             SQLiteStatement stmt = null;
             try {
-                stmt = db.compileStatement("INSERT INTO secure(name,value)"
+                stmt = db.compileStatement("INSERT INTO global(name,value)"
                         + " VALUES(?,?);");
-                loadSetting(stmt, CMSettings.Secure.CM_SETUP_WIZARD_COMPLETED,
-                        Settings.Global.getString(mContext.getContentResolver(),
-                                Settings.Global.DEVICE_PROVISIONED));
+                loadIntegerSetting(stmt, CMSettings.Global.WEATHER_TEMPERATURE_UNIT,
+                        R.integer.def_temperature_unit);
                 db.setTransactionSuccessful();
             } finally {
                 if (stmt != null) stmt.close();
@@ -202,24 +202,6 @@ public class CMDatabaseHelper extends SQLiteOpenHelper{
         }
 
         if (upgradeVersion < 5) {
-            if (mUserHandle == UserHandle.USER_OWNER) {
-                db.beginTransaction();
-                SQLiteStatement stmt = null;
-                try {
-                    stmt = db.compileStatement("INSERT INTO global(name,value)"
-                            + " VALUES(?,?);");
-                    loadIntegerSetting(stmt, CMSettings.Global.WEATHER_TEMPERATURE_UNIT,
-                            R.integer.def_temperature_unit);
-                    db.setTransactionSuccessful();
-                } finally {
-                    if (stmt != null) stmt.close();
-                    db.endTransaction();
-                }
-            }
-            upgradeVersion = 5;
-        }
-
-        if (upgradeVersion < 6) {
             // Move force_show_navbar to global
             if (mUserHandle == UserHandle.USER_OWNER) {
                 moveSettingsToNewTable(db, CMTableNames.TABLE_SECURE,
@@ -227,7 +209,7 @@ public class CMDatabaseHelper extends SQLiteOpenHelper{
                         CMSettings.Secure.DEV_FORCE_SHOW_NAVBAR
                 }, true);
             }
-            upgradeVersion = 6;
+            upgradeVersion = 5;
         }
         // *** Remember to update DATABASE_VERSION above!
 
